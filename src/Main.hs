@@ -8,6 +8,8 @@ import qualified OpenSSL.RSA as RSA
 import qualified OpenSSL.EVP.PKey as PKey
 
 import Control.Exception (try, SomeException)
+import Control.Monad.Trans (lift)
+import qualified Control.Monad.Trans.Either as ET
 
 import qualified Numeric as N
 import qualified Data.Hash.MD5 as MD5
@@ -67,18 +69,13 @@ keySignature = getMD5Sum . prepend . map toUpper . int2hex . RSA.rsaN
 
 
 -- TODO set values in prometheus instead of printing
-checkServerKey :: Host -> Port -> IO ()
-checkServerKey h p = do
-    -- TODO refactor this awful shit
-    crtRes <- getSrvCrt h p
-    case crtRes of
-        Left e    -> putStrLn $ "error occured: " ++ show e
-        Right crt -> do
-             pkRes <- getPubKey crt
-             case pkRes of
-                -- todo: verify if key matches to reference
-                Left e   -> putStrLn $ "unexpected error: " ++ show e
-                Right pk -> putStrLn $ "public key signature: " ++ keySignature pk
+checkServerKey :: Host -> Port -> IO (Either ProcErrors RSA.RSAPubKey)
+checkServerKey h p = ET.runEitherT $ do
+    crtRes <- lift $ getSrvCrt h p
+    crt <- ET.hoistEither crtRes
+    pkRes <- lift $ getPubKey crt
+    pk <- ET.hoistEither pkRes
+    return pk
 
 
 serverHost = "127.0.0.1"
@@ -87,6 +84,9 @@ serverPort = 11011
 
 main = withOpenSSL $ do
     -- TODO add cert expiration time
-    checkServerKey serverHost serverPort
+    pkRes <- checkServerKey serverHost serverPort
+    case pkRes of
+        Left exc -> putStrLn $ "certificate verification failed: " ++ show exc
+        Right pk -> putStrLn $ "key signature: " ++ keySignature pk
 
 
