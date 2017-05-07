@@ -21,12 +21,14 @@ import qualified Data.Hash.MD5 as MD5
 
 type Host = String
 type Port = Int
+type SrvKey = String
+
 
 data ProcErrors = ConnectFail | RetrieveFail | PKObtainFail deriving (Eq, Show)
 
 
-getSrvCrt :: Host -> Port -> IO (Either ProcErrors X509.X509)
-getSrvCrt h p = do
+getServerCrt :: Host -> Port -> IO (Either ProcErrors X509.X509)
+getServerCrt h p = do
     res <- try $ getSrvCrtProc h p :: IO (Either SomeException (Maybe X509.X509))
     case res of
         Left except      -> return $ Left ConnectFail
@@ -68,14 +70,31 @@ keySignature = getMD5Sum . prepend . map toUpper . int2hex . RSA.rsaN
         getMD5Sum = MD5.md5s . MD5.Str
 
 
--- TODO set values in prometheus instead of printing
-checkServerKey :: Host -> Port -> IO (Either ProcErrors RSA.RSAPubKey)
-checkServerKey h p = ET.runEitherT $ do
-    crtRes <- lift $ getSrvCrt h p
+getServerKey :: Host -> Port -> IO (Either ProcErrors RSA.RSAPubKey)
+getServerKey h p = ET.runEitherT $ do
+    crtRes <- lift $ getServerCrt h p
     crt <- ET.hoistEither crtRes
     pkRes <- lift $ getPubKey crt
     pk <- ET.hoistEither pkRes
     return pk
+
+
+checkServerKey :: Host -> Port -> SrvKey -> IO ()
+checkServerKey h p refKey = do
+    keyRes <- getServerKey h p
+    case keyRes of
+        -- TODO set values in prometheus instead of printing
+        Left err -> putStrLn $ "key check error: " ++ errToMetric err
+        Right key -> if refKey == keySignature key
+                        then putStrLn "ok, key matches!"
+                        else putStrLn "failure, key doesn't match"
+
+
+-- TODO use prometheus gauge values instead of strings: i.e Int
+errToMetric :: ProcErrors -> String
+errToMetric ConnectFail  = "server connection error"
+errToMetric RetrieveFail = "certificate retrieval error"
+errToMetric PKObtainFail = "public key retrieval error"
 
 
 serverHost = "127.0.0.1"
@@ -84,9 +103,13 @@ serverPort = 11011
 
 main = withOpenSSL $ do
     -- TODO add cert expiration time
-    pkRes <- checkServerKey serverHost serverPort
+    {-
+    pkRes <- getServerKey serverHost serverPort
     case pkRes of
         Left exc -> putStrLn $ "certificate verification failed: " ++ show exc
         Right pk -> putStrLn $ "key signature: " ++ keySignature pk
+    -}
+    let sampleKey = "790827182fb3a1fd395c69976778d34e"
+    checkServerKey serverHost serverPort sampleKey
 
 
