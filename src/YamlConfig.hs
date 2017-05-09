@@ -6,8 +6,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Yaml as Y
 import Data.Yaml (FromJSON(..), (.:))
 
-import qualified Control.Monad.Trans.Maybe as MBT
-import Control.Monad.Trans (liftIO)
+import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
 import System.Environment (getArgs)
 
 
@@ -71,7 +70,6 @@ getConfFileName = do
 
 
 getConfigFile :: IO (Maybe Config)
-getConfigFile = MBT.runMaybeT $ do
-    f <- MBT.MaybeT $ liftIO getConfFileName
-    MBT.MaybeT $ liftIO $ readConfig f
-
+getConfigFile = runMaybeT $ do
+    fname <- MaybeT getConfFileName
+    MaybeT $ readConfig fname

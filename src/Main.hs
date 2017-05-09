@@ -16,7 +16,7 @@ import qualified Data.Hash.MD5 as MD5
 
 import qualified Data.Time.Clock as Clock
 
-import Config
+import YamlConfig
 
 
 --serverHost = "01.mqtt.syncleo-iot.com"
@@ -44,7 +44,7 @@ getServerCrt h p = do
     case res of
         Left except      -> return $ Left ConnectFail
         Right (Just crt) -> return $ Right crt
-        otherwise        -> return $ Left RetrieveFail
+        _                -> return $ Left RetrieveFail
     where
         getSrvCrtProc :: Host -> Port -> IO (Maybe X509.X509)
         getSrvCrtProc h p = do
@@ -86,8 +86,7 @@ getServerKey h p = ET.runEitherT $ do
     crtRes <- lift $ getServerCrt h p
     crt    <- ET.hoistEither crtRes
     pkRes  <- lift $ getPubKey crt
-    pk     <- ET.hoistEither pkRes
-    return pk
+    ET.hoistEither pkRes
 
 
 getCrtTime :: Host -> Port -> IO (Either ProcErrors CrtExpiration)
@@ -96,8 +95,7 @@ getCrtTime h p = ET.runEitherT $ do
     crt       <- ET.hoistEither crtRes
     notBefore <- lift $ X509.getNotBefore crt
     notAfter  <- lift $ X509.getNotAfter crt
-    daysLeft  <- lift $ getDaysLeft notBefore notAfter
-    return daysLeft
+    lift $ getDaysLeft notBefore notAfter
 
 
 getDaysLeft :: Clock.UTCTime -> Clock.UTCTime -> IO CrtExpiration
