@@ -1,0 +1,19 @@
+# general settings
+general:
+    prometheus_port: 7070
+    check_interval: 1
+
+
+# certificate expiration
+certificates:
+    - host: www.yandex.ru
+      port: 443
+    - host: www.google.com
+      port: 443
+
+
+# public key signature
+keys:
+    - host: 127.0.0.1
+      port: 1234
+      key: 790827182fb3a1fd395c69976778d34e

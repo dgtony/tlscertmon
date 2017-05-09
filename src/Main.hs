@@ -16,6 +16,9 @@ import qualified Data.Hash.MD5 as MD5
 
 import qualified Data.Time.Clock as Clock
 
+import Config
+
+
 --serverHost = "01.mqtt.syncleo-iot.com"
 --serverPort = 8883
 
@@ -146,6 +149,12 @@ serverPort = 11011
 
 
 main = withOpenSSL $ do
+    confFile <- getConfigFile
+    case confFile of
+        Nothing   -> fail "Usage: ./monitor <config_file_path>"
+        Just conf -> putStrLn $ "get config: " ++ show conf
+
+
     let sampleKey = "790827182fb3a1fd395c69976778d34e"
     checkServerKey serverHost serverPort sampleKey
     checkServerCrt serverHost serverPort
