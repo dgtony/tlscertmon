@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Config where
+module YamlConfig where
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Yaml as Y
