@@ -57,7 +57,11 @@ getServerCrt h p = do
             ctx <- SSL.context
             wrappedSSLSocket <- SSL.connection ctx sock
             _ <- SSL.connect wrappedSSLSocket
-            SSL.getPeerCertificate wrappedSSLSocket
+            peerCrt <- SSL.getPeerCertificate wrappedSSLSocket
+            -- close connection
+            SSL.shutdown wrappedSSLSocket SSL.Unidirectional
+            S.close sock
+            return peerCrt
 
 
 getPubKey :: X509.X509 -> IO (Either ProcErrors RSA.RSAPubKey)
