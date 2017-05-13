@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 
 executable TLSCertMon
   main-is:             Main.hs
-  other-modules:       YamlConfig
+  other-modules:       Config, TLSProcessing
   -- other-extensions:    
   build-depends:       base >=4.9
                      , network >=2.6
