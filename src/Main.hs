@@ -78,9 +78,17 @@ runPrometheus config = PRT.runRegistryT $ do
         transformArgKey f (m, co, i) = f m (keyCheckHost co) (keyCheckPort co) (keyCheckRefKey co) i
 
 
+printStats config = do
+    let numCrts = length $ crtCheckOpts config
+        numKeys = length $ keyCheckOpts config
+    putStrLn "monitoring started..."
+    putStrLn $ "certificates: " ++ show numCrts
+    putStrLn $ "public keys:  " ++ show numKeys
+
+
 main = withOpenSSL $ do
     confFile <- readConfigFile
     case confFile of
-        Just config -> runPrometheus config
+        Just config -> printStats config >> runPrometheus config
         Nothing   -> putStrLn "Usage: ./monitor <config_file_path>"
 
