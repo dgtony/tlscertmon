@@ -23,11 +23,13 @@ instance FromJSON Config where
 
 
 data GeneralOpts = GeneralOpts { promPort      :: Int,
+                                 metricPath    :: String,
                                  checkInterval :: Int } deriving (Eq, Show)
 
 instance FromJSON GeneralOpts where
     parseJSON (Y.Object m) = GeneralOpts <$>
         m .: "prometheus_port" <*>
+        m .: "metric_path"     <*>
         m .: "check_interval"
     parseJSON x = fail ("not an object: " ++ show x)
 
@@ -54,8 +56,8 @@ instance FromJSON KeyOpts where
     parseJSON x = fail ("not an object: " ++ show x)
 
 
-readConfig :: FilePath -> IO (Maybe Config)
-readConfig fp = do
+loadConfig :: FilePath -> IO (Maybe Config)
+loadConfig fp = do
     content <- BS.readFile fp
     let parsed = Y.decode content :: Maybe Config
     return parsed
@@ -69,7 +71,7 @@ getConfFileName = do
         _ -> return Nothing
 
 
-getConfigFile :: IO (Maybe Config)
-getConfigFile = runMaybeT $ do
+readConfigFile :: IO (Maybe Config)
+readConfigFile = runMaybeT $ do
     fname <- MaybeT getConfFileName
-    MaybeT $ readConfig fname
+    MaybeT $ loadConfig fname

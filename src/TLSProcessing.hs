@@ -1,4 +1,4 @@
-module TLSProcessing where
+module TLSProcessing (Host, Port, SrvKey, checkServerKey, checkServerCrt) where
 
 import qualified Network.Socket as S
 import qualified OpenSSL.Session as SSL
@@ -107,7 +107,7 @@ getDaysLeft notBefore notAfter = do
                 | currentTime > upTo = CrtExpired
                 | otherwise = Days $ secToDays $ Clock.diffUTCTime upTo currentTime
 
-
+{-
 checkServerKey :: Host -> Port -> SrvKey -> IO ()
 checkServerKey h p refKey = do
     keyRes <- getServerKey h p
@@ -125,8 +125,26 @@ checkServerCrt h p = do
     case daysLeft of
         Left err  -> putStrLn $ "key check error: " ++ errToMetric err
         Right res -> putStrLn $ "certificate expiration check: " ++ daysToMetric res
+-}
+
+checkServerCrt :: Host -> Port -> IO Double
+checkServerCrt h p = do
+    daysLeft <- getCrtTime h p
+    case daysLeft of
+        Left err  -> return $ errToMetric err
+        Right res -> return $ daysToMetric res
 
 
+checkServerKey :: Host -> Port -> SrvKey -> IO Double
+checkServerKey h p refKey = do
+    keyRes <- getServerKey h p
+    case keyRes of
+        -- TODO set values in prometheus instead of printing
+        Left err  -> return $ errToMetric err
+        Right key -> return $ keyValidToMetric $ refKey == keySignature key
+
+
+{-
 -- TODO use prometheus gauge values instead of strings: i.e Int
 errToMetric :: ProcErrors -> String
 errToMetric ConnectFail     = "server connection error"
@@ -137,4 +155,20 @@ daysToMetric :: CrtExpiration -> String
 daysToMetric CrtNotValidYet = "certificate not valid yet"
 daysToMetric CrtExpired     = "certificate expired"
 daysToMetric (Days n)       = "days to expiration: " ++ show n
+-}
 
+
+-- TODO use prometheus gauge values instead of strings: i.e Int
+errToMetric :: ProcErrors -> Double
+errToMetric ConnectFail     = (-1000)   -- server connection error
+errToMetric RetrieveFail    = (-2000)   -- certificate retrieval error
+errToMetric PKObtainFail    = (-3000)   --public key retrieval error
+
+daysToMetric :: CrtExpiration -> Double
+daysToMetric CrtNotValidYet = (-100)    -- certificate not valid yet
+daysToMetric CrtExpired     = (-200)    -- certificate expired
+daysToMetric (Days n)       = fromIntegral n
+
+keyValidToMetric :: Bool -> Double
+keyValidToMetric True   = 1
+keyValidToMetric False  = 0

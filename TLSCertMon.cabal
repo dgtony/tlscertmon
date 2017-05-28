@@ -1,30 +1,35 @@
-name:                TLSCertMon
-version:             0.1.0.0
-synopsis:            Periodic remote health check of server's TLS-certificates
--- description:         
-license:             BSD3
-license-file:        LICENSE
-author:              Anton Dort-Golts
-maintainer:          dortgolts@gmail.com
--- copyright:           
-category:            System
-build-type:          Simple
-extra-source-files:  ChangeLog.md
-cabal-version:       >=1.10
+name:                   TLSCertMon
+version:                0.1.0.0
+synopsis:               Remote health check of server's TLS-certificates
+-- description:
+license:                BSD3
+license-file:           LICENSE
+author:                 Anton Dort-Golts
+maintainer:             dortgolts@gmail.com
+-- copyright:
+category:               System
+build-type:             Simple
+extra-source-files:     ChangeLog.md
+cabal-version:          >=1.10
 
 executable TLSCertMon
-  main-is:             Main.hs
-  other-modules:       Config, TLSProcessing
-  -- other-extensions:    
-  build-depends:       base >=4.9
-                     , network >=2.6
-                     , HsOpenSSL >=0.11
-                     , MissingH >=1.4
-                     , bytestring >= 0.10.8
-                     , transformers >=0.5.2
-                     , either >=4.4.1
-                     , mtl >=2.2.1
-                     , yaml >=0.8.22
-                     , time >=1.6.0
-  hs-source-dirs:      src
-  default-language:    Haskell2010
+    main-is:                Main.hs
+    other-modules:          Config, TLSProcessing
+    -- other-extensions   :
+    build-depends:          base >=4.9
+                          , network >=2.6
+                          , HsOpenSSL >=0.11
+                          , MissingH >=1.4
+                          , bytestring >= 0.10.8
+                          , transformers >=0.5.2
+                          , either >=4.4.1
+                          , mtl >=2.2.1
+                          , yaml >=0.8.22
+                          , time >=1.6.0
+                          , text >=1.2.2
+                          , prometheus >= 0.4
+
+    ghc-options:         -rtsopts -threaded
+                         -- -prof -fprof-auto  -- <- profiling options
+    hs-source-dirs:      src
+    default-language:    Haskell2010

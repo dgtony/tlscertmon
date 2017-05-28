@@ -1,7 +1,8 @@
 # general settings
 general:
     prometheus_port: 7070
-    check_interval: 1
+    metric_path: metrics
+    check_interval: 60
 
 
 # certificate expiration
@@ -15,5 +16,5 @@ certificates:
 # public key signature
 keys:
     - host: 127.0.0.1
-      port: 1234
+      port: 11011
       key: 790827182fb3a1fd395c69976778d34e
