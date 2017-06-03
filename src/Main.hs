@@ -5,6 +5,7 @@ import Config
 
 import OpenSSL (withOpenSSL)
 import Data.Text (pack)
+import System.Environment (getProgName)
 
 import System.Metrics.Prometheus.Concurrent.Http (serveHttpTextMetricsT)
 import System.Metrics.Prometheus.MetricId (fromList)
@@ -78,6 +79,12 @@ runPrometheus config = PRT.runRegistryT $ do
         transformArgKey f (m, co, i) = f m (keyCheckHost co) (keyCheckPort co) (keyCheckRefKey co) i
 
 
+printUsage :: String -> IO ()
+printUsage monitorName = do
+    putStrLn $ "Usage: ./" ++ monitorName ++ " <config_file_path>"
+
+
+printStats :: Config -> IO ()
 printStats config = do
     let numCrts = length $ crtCheckOpts config
         numKeys = length $ keyCheckOpts config
@@ -86,9 +93,10 @@ printStats config = do
     putStrLn $ "public keys:  " ++ show numKeys
 
 
+
 main = withOpenSSL $ do
+    monitorName <- getProgName
     confFile <- readConfigFile
     case confFile of
         Just config -> printStats config >> runPrometheus config
-        Nothing   -> putStrLn "Usage: ./monitor <config_file_path>"
-
+        Nothing     -> printUsage monitorName
