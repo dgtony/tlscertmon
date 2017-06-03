@@ -25,10 +25,15 @@ keyMetricLabel = "host"
 
 
 registerMetricCrt :: MonadIO m => CrtOpts -> PRT.RegistryT m G.Gauge
-registerMetricCrt mOpts = PRT.registerGauge crtMetricName (fromList [(crtMetricLabel, pack . crtCheckHost $ mOpts)])
+registerMetricCrt mOpts = do
+    let metricLabel = pack $ crtCheckHost mOpts ++ ":" ++ show (crtCheckPort mOpts)
+    PRT.registerGauge crtMetricName (fromList [(crtMetricLabel, metricLabel)])
+
 
 registerMetricKey :: MonadIO m => KeyOpts -> PRT.RegistryT m G.Gauge
-registerMetricKey mOpts = PRT.registerGauge keyMetricName (fromList [(keyMetricLabel, pack . keyCheckHost $ mOpts)])
+registerMetricKey mOpts = do
+    let metricLabel = pack $ keyCheckHost mOpts ++ ":" ++ show (keyCheckPort mOpts)
+    PRT.registerGauge keyMetricName (fromList [(keyMetricLabel, metricLabel)])
 
 
 runCheckCrt
