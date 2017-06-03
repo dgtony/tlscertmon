@@ -107,25 +107,6 @@ getDaysLeft notBefore notAfter = do
                 | currentTime > upTo = CrtExpired
                 | otherwise = Days $ secToDays $ Clock.diffUTCTime upTo currentTime
 
-{-
-checkServerKey :: Host -> Port -> SrvKey -> IO ()
-checkServerKey h p refKey = do
-    keyRes <- getServerKey h p
-    case keyRes of
-        -- TODO set values in prometheus instead of printing
-        Left err  -> putStrLn $ "key check error: " ++ errToMetric err
-        Right key -> if refKey == keySignature key
-                        then putStrLn "ok, key matches!"
-                        else putStrLn "failure, key doesn't match"
-
-
-checkServerCrt :: Host -> Port -> IO ()
-checkServerCrt h p = do
-    daysLeft <- getCrtTime h p
-    case daysLeft of
-        Left err  -> putStrLn $ "key check error: " ++ errToMetric err
-        Right res -> putStrLn $ "certificate expiration check: " ++ daysToMetric res
--}
 
 checkServerCrt :: Host -> Port -> IO Double
 checkServerCrt h p = do
@@ -142,20 +123,6 @@ checkServerKey h p refKey = do
         -- TODO set values in prometheus instead of printing
         Left err  -> return $ errToMetric err
         Right key -> return $ keyValidToMetric $ refKey == keySignature key
-
-
-{-
--- TODO use prometheus gauge values instead of strings: i.e Int
-errToMetric :: ProcErrors -> String
-errToMetric ConnectFail     = "server connection error"
-errToMetric RetrieveFail    = "certificate retrieval error"
-errToMetric PKObtainFail    = "public key retrieval error"
-
-daysToMetric :: CrtExpiration -> String
-daysToMetric CrtNotValidYet = "certificate not valid yet"
-daysToMetric CrtExpired     = "certificate expired"
-daysToMetric (Days n)       = "days to expiration: " ++ show n
--}
 
 
 -- TODO use prometheus gauge values instead of strings: i.e Int
